@@ -10,6 +10,14 @@ from rfworkbench.analysis import analyze_signal, spectrum
 from rfworkbench.filters import apply_filter
 from rfworkbench.modulation import am_modulate, fm_modulate
 
+
+def _csv_bytes(time_values: np.ndarray, signal_values: np.ndarray) -> bytes:
+    """Serialize time and amplitude columns as UTF-8 CSV bytes."""
+    buffer = io.StringIO()
+    np.savetxt(buffer, np.column_stack((time_values, signal_values)), delimiter=",", header="time_s,amplitude", comments="")
+    return buffer.getvalue().encode("utf-8")
+
+
 st.set_page_config(page_title="RF Signal Workbench", page_icon="📡", layout="wide")
 st.title("📡 RF Signal Workbench")
 st.caption("An interactive sandbox for RF and digital signal-processing fundamentals.")
@@ -82,7 +90,7 @@ if st.button("Apply filter"):
         ax.legend()
         st.pyplot(fig)
         plt.close(fig)
-        st.download_button("Download filtered samples (CSV)", filtered.astype(float).to_csv if False else _csv_bytes(t, filtered), "filtered_signal.csv", "text/csv")
+        st.download_button("Download filtered samples (CSV)", _csv_bytes(t, filtered), "filtered_signal.csv", "text/csv")
     except ValueError as exc:
         st.error(str(exc))
 
@@ -107,10 +115,3 @@ with mod_col2:
 
 st.download_button("Download current signal (CSV)", _csv_bytes(t, noisy), "signal_samples.csv", "text/csv")
 st.caption("Educational simulation only. Check sampling, units, and model assumptions before interpreting results.")
-
-
-def _csv_bytes(time_values: np.ndarray, signal_values: np.ndarray) -> bytes:
-    """Serialize time and amplitude columns as UTF-8 CSV bytes."""
-    buffer = io.StringIO()
-    np.savetxt(buffer, np.column_stack((time_values, signal_values)), delimiter=",", header="time_s,amplitude", comments="")
-    return buffer.getvalue().encode("utf-8")
